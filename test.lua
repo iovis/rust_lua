@@ -45,3 +45,14 @@ log("point.y = " .. point.y)
 point:scale(2)
 log("point.x = " .. point.x)
 log("point.y = " .. point.y)
+
+log("--- HTTP calls")
+for _, user in ipairs(get_users()) do
+  log("{")
+  log("  id: " .. user.id)
+  log("  avatar: " .. user.avatar)
+  log("  email: " .. user.email)
+  log("  first_name: " .. user.first_name)
+  log("  last_name: " .. user.last_name)
+  log("}")
+end

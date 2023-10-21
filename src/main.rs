@@ -1,7 +1,31 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use mlua::Lua;
+use mlua::{Lua, LuaSerdeExt};
+use serde::{Deserialize, Serialize};
+
+// https://reqres.in/api/users
+//
+// {
+//     "avatar": "https://reqres.in/img/faces/1-image.jpg",
+//     "email": "george.bluth@reqres.in",
+//     "first_name": "George",
+//     "id": 1,
+//     "last_name": "Bluth"
+// },
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct User {
+    id: usize,
+    avatar: String,
+    email: String,
+    first_name: String,
+    last_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct UsersResponse {
+    data: Vec<User>,
+}
 
 fn main() -> Result<()> {
     let code = std::fs::read_to_string("test.lua").unwrap();
@@ -87,6 +111,21 @@ fn main() -> Result<()> {
             )?;
 
             Ok(point)
+        })?,
+    )?;
+
+    // More interesting function
+    globals.set(
+        "get_users",
+        lua.create_function(|lua, ()| {
+            let users = reqwest::blocking::get("https://reqres.in/api/users")
+                .unwrap()
+                .json::<UsersResponse>()
+                .unwrap()
+                .data;
+
+            // .to_value() is necessary for Serialization
+            Ok(lua.to_value(&users))
         })?,
     )?;
 
