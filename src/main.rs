@@ -61,6 +61,31 @@ fn main() -> Result<()> {
                 })?,
             )?;
 
+            point.set(
+                "scale",
+                lua.create_function(|_, (myself, scale_factor): (mlua::Table, f32)| {
+                    let (x, y): (f32, f32) = (myself.get("x")?, myself.get("y")?);
+
+                    myself.set("x", x * scale_factor)?;
+                    myself.set("y", y * scale_factor)?;
+
+                    Ok(myself)
+                })?,
+            )?;
+
+            point.set(
+                "double_cloned",
+                lua.create_function(|lua, (myself,): (mlua::Table,)| {
+                    let (x, y): (f32, f32) = (myself.get("x")?, myself.get("y")?);
+
+                    let globals = lua.globals();
+                    let point: mlua::Function = globals.get("Point")?;
+                    let point: mlua::Table = point.call((x * 2.0, y * 2.0))?;
+
+                    Ok(point)
+                })?,
+            )?;
+
             Ok(point)
         })?,
     )?;

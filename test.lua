@@ -35,3 +35,13 @@ local point = Point(3, 4)
 log("point.x = " .. point.x)
 log("point.y = " .. point.y)
 log("point:distance() = " .. point:distance())
+
+local point2 = point:double_cloned(2)
+log("point2.x = " .. point2.x)
+log("point2.y = " .. point2.y)
+log("point.x = " .. point.x)
+log("point.y = " .. point.y)
+
+point:scale(2)
+log("point.x = " .. point.x)
+log("point.y = " .. point.y)
