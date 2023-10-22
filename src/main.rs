@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use anyhow::Result;
 use mlua::{ExternalResult, FromLua, Lua, LuaSerdeExt};
@@ -44,16 +45,23 @@ struct UsersResponse {
 }
 
 fn main() -> Result<()> {
-    let code = std::fs::read_to_string("test.lua").unwrap();
+    let lua_path = Path::new("./lua");
+    println!("Path: {}", lua_path.join("init.lua").display());
+    let code = std::fs::read_to_string(lua_path.join("init.lua")).unwrap();
 
     let lua = Lua::new();
+
+    // Add ./lua/ to _G.package.path
+    set_package_path(&lua, lua_path)?;
+
+    // Passing information to Lua
     let globals = lua.globals();
-    let non_magical_number = 42;
 
     // Example string
     globals.set("message_from_rust", "HEDDO? (in Rust)")?;
 
     // Example number
+    let non_magical_number = 42;
     globals.set("non_magical_number", non_magical_number)?;
 
     // Example function
@@ -93,7 +101,7 @@ fn main() -> Result<()> {
             // Methods
             point.set(
                 "distance",
-                lua.create_function(|_, (myself,): (mlua::Table,)| {
+                lua.create_function(|_, myself: mlua::Table| {
                     let x: f32 = myself.get("x")?;
                     let y: f32 = myself.get("y")?;
 
@@ -115,7 +123,7 @@ fn main() -> Result<()> {
 
             point.set(
                 "double_cloned",
-                lua.create_function(|lua, (myself,): (mlua::Table,)| {
+                lua.create_function(|lua, myself: mlua::Table| {
                     let (x, y): (f32, f32) = (myself.get("x")?, myself.get("y")?);
 
                     let globals = lua.globals();
@@ -177,6 +185,24 @@ fn main() -> Result<()> {
 
     let users: Vec<User> = globals.get("users")?;
     println!("[Rust]\tusers = {users:#?}");
+
+    Ok(())
+}
+
+/// Add path to _G.package.path
+fn set_package_path(lua: &Lua, path: &Path) -> anyhow::Result<()> {
+    let globals = lua.globals();
+    let package: mlua::Table = globals.get("package")?;
+    let package_path: String = package.get("path")?;
+    let mut path_array: Vec<String> = package_path
+        .split(';')
+        .map(std::borrow::ToOwned::to_owned)
+        .collect();
+
+    path_array.insert(0, format!("{}/?.lua", path.display()));
+    path_array.insert(1, format!("{}/?/init.lua", path.display()));
+
+    package.set("path", path_array.join(";"))?;
 
     Ok(())
 }

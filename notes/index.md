@@ -9,5 +9,5 @@
 - [x] Pass object with attributes and methods
 - [x] Serialize/Deserialize into Rust struct
 - [x] Handle `Result`
-- [ ] Handle user `require`s
+- [x] Handle user `require`s
 - [ ] Do a `require`able library (different crate, cdylib)

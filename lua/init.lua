@@ -3,27 +3,8 @@ message_from_rust = message_from_rust
 ---@type number
 non_magical_number = non_magical_number
 
-local table_print = function(tbl, indent)
-  if not indent then
-    indent = 0
-  end
-  local formatted = ""
-  for k, v in pairs(tbl) do
-    local key = tostring(k)
-    local value = tostring(v)
-
-    if type(v) == "table" then
-      value = table_print(v, indent + 1)
-    end
-
-    formatted = formatted .. string.rep("  ", indent) .. key .. ": " .. value .. "\n"
-  end
-  return formatted
-end
-
-local log = function(message)
-  print("[Lua]", message)
-end
+local log = require("log").log
+local table_print = require("log").table_print
 
 log("--- Primitives")
 log("HEDDO! (from Lua)")
