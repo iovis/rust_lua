@@ -191,19 +191,28 @@ fn main() -> Result<()> {
 
 /// Add path to _G.package.path
 fn set_package_path(lua: &Lua, path: &Path) -> anyhow::Result<()> {
-    let globals = lua.globals();
-    let package: mlua::Table = globals.get("package")?;
-    let package_path: String = package.get("path")?;
-    let mut path_array: Vec<String> = package_path
+    let package: mlua::Table = lua.globals().get("package")?;
+
+    let mut package_path: Vec<String> = package
+        .get::<_, String>("path")?
         .split(';')
         .map(std::borrow::ToOwned::to_owned)
         .collect();
 
-    path_array.insert(0, format!("{}/?.lua", path.display()));
-    path_array.insert(0, format!("{}/?.so", path.display()));
-    path_array.insert(1, format!("{}/?/init.lua", path.display()));
+    package_path.insert(0, format!("{}/?.lua", path.display()));
+    package_path.insert(1, format!("{}/?/init.lua", path.display()));
 
-    package.set("path", path_array.join(";"))?;
+    package.set("path", package_path.join(";"))?;
+
+    let mut package_cpath: Vec<String> = package
+        .get::<_, String>("cpath")?
+        .split(';')
+        .map(std::borrow::ToOwned::to_owned)
+        .collect();
+
+    package_cpath.insert(0, format!("{}/?.so", path.display()));
+
+    package.set("cpath", package_cpath.join(";"))?;
 
     Ok(())
 }
