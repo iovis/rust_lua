@@ -80,3 +80,21 @@ else
   log("Error: ")
   print(result)
 end
+
+log("--- Rust library")
+-- For some reason this is breaking with the rust lua runtime, but not in luajit
+--
+-- This:
+local su = require("string_utils")
+log('su.is_empty("nonempty") = ' .. tostring(su.is_empty("nonempty")))
+--
+-- Fails with:
+-- Error: runtime error: error loading module 'string_utils' from file './lua/string_utils.so':
+--         ./lua/string_utils.so:1: '=' expected
+-- stack traceback:
+--         [C]: in ?
+--         [C]: in ?
+--         [C]: in function 'require'
+--         [string "src/main.rs:173:9"]:85: in main chunk
+--
+-- But `luajit -e 'print(require("string_utils").is_empty("nonempty"))` works :/

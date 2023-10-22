@@ -46,10 +46,10 @@ struct UsersResponse {
 
 fn main() -> Result<()> {
     let lua_path = Path::new("./lua");
-    println!("Path: {}", lua_path.join("init.lua").display());
     let code = std::fs::read_to_string(lua_path.join("init.lua")).unwrap();
 
-    let lua = Lua::new();
+    // let lua = Lua::new(); // Normally you'd use this if you don't need to require C modules
+    let lua = unsafe { Lua::unsafe_new() };
 
     // Add ./lua/ to _G.package.path
     set_package_path(&lua, lua_path)?;
@@ -200,6 +200,7 @@ fn set_package_path(lua: &Lua, path: &Path) -> anyhow::Result<()> {
         .collect();
 
     path_array.insert(0, format!("{}/?.lua", path.display()));
+    path_array.insert(0, format!("{}/?.so", path.display()));
     path_array.insert(1, format!("{}/?/init.lua", path.display()));
 
     package.set("path", path_array.join(";"))?;

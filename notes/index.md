@@ -10,4 +10,5 @@
 - [x] Serialize/Deserialize into Rust struct
 - [x] Handle `Result`
 - [x] Handle user `require`s
-- [ ] Do a `require`able library (different crate, cdylib)
+- [x] Do a `require`able library (different crate, cdylib)
+  - For some reason it fails when called from Rust, but it works from luajit...
