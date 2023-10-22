@@ -3,6 +3,24 @@ message_from_rust = message_from_rust
 ---@type number
 non_magical_number = non_magical_number
 
+local table_print = function(tbl, indent)
+  if not indent then
+    indent = 0
+  end
+  local formatted = ""
+  for k, v in pairs(tbl) do
+    local key = tostring(k)
+    local value = tostring(v)
+
+    if type(v) == "table" then
+      value = table_print(v, indent + 1)
+    end
+
+    formatted = formatted .. string.rep("  ", indent) .. key .. ": " .. value .. "\n"
+  end
+  return formatted
+end
+
 local log = function(message)
   print("[Lua]", message)
 end
@@ -55,4 +73,29 @@ for _, user in ipairs(get_users()) do
   log("  first_name: " .. user.first_name)
   log("  last_name: " .. user.last_name)
   log("}")
+end
+
+log("--- HTTP calls (2)")
+local response = http.get("https://reqres.in/api/users")
+
+users = response.data
+
+for _, user in ipairs(users) do
+  log("{")
+  log("  id: " .. user.id)
+  log("  avatar: " .. user.avatar)
+  log("  email: " .. user.email)
+  log("  first_name: " .. user.first_name)
+  log("  last_name: " .. user.last_name)
+  log("}")
+end
+
+log("--- HTTP calls (3)")
+local ok, result = pcall(http.get, "asdf")
+
+if ok then
+  log("Success: " .. table_print(result))
+else
+  log("Error: ")
+  print(result)
 end

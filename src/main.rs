@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use mlua::{Lua, LuaSerdeExt};
+use mlua::{ExternalResult, FromLua, Lua, LuaSerdeExt};
 use serde::{Deserialize, Serialize};
 
 // https://reqres.in/api/users
@@ -20,6 +20,22 @@ struct User {
     email: String,
     first_name: String,
     last_name: String,
+}
+
+// TODO: Why do I need to manually `impl FromLua`?
+impl<'lua> FromLua<'lua> for User {
+    fn from_lua(value: mlua::Value<'lua>, _: &'lua Lua) -> mlua::Result<Self> {
+        match value {
+            mlua::Value::Table(user) => Ok(User {
+                id: user.get("id")?,
+                avatar: user.get("avatar")?,
+                email: user.get("email")?,
+                first_name: user.get("first_name")?,
+                last_name: user.get("last_name")?,
+            }),
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -129,6 +145,22 @@ fn main() -> Result<()> {
         })?,
     )?;
 
+    // Object with methods and errors
+    let http = lua.create_table()?;
+    http.set(
+        "get",
+        lua.create_function(|lua, url: String| {
+            let users: serde_json::Value = reqwest::blocking::get(url)
+                .into_lua_err()?
+                .json()
+                .into_lua_err()?;
+
+            Ok(lua.to_value(&users))
+        })?,
+    )?;
+
+    globals.set("http", http)?;
+
     lua.load(code).exec()?;
 
     let non_magical_number: i32 = globals.get("non_magical_number")?;
@@ -142,6 +174,9 @@ fn main() -> Result<()> {
 
     let lua_tbl: HashMap<String, i32> = a_table.get("lua_tbl")?;
     println!("[Rust]\ta_table.lua_tbl = {lua_tbl:?}");
+
+    let users: Vec<User> = globals.get("users")?;
+    println!("[Rust]\tusers = {users:#?}");
 
     Ok(())
 }

@@ -7,4 +7,7 @@
   - [x] Tables
 - [x] Pass functions
 - [x] Pass object with attributes and methods
-- [x] Serialize into Rust struct (https://github.com/khvzak/mlua/blob/master/examples/serialize.rs)
+- [x] Serialize/Deserialize into Rust struct
+- [x] Handle `Result`
+- [ ] Handle user `require`s
+- [ ] Do a `require`able library (different crate, cdylib)
