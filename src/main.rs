@@ -23,22 +23,6 @@ struct User {
     last_name: String,
 }
 
-// TODO: Why do I need to manually `impl FromLua`?
-impl<'lua> FromLua<'lua> for User {
-    fn from_lua(value: mlua::Value<'lua>, _: &'lua Lua) -> mlua::Result<Self> {
-        match value {
-            mlua::Value::Table(user) => Ok(User {
-                id: user.get("id")?,
-                avatar: user.get("avatar")?,
-                email: user.get("email")?,
-                first_name: user.get("first_name")?,
-                last_name: user.get("last_name")?,
-            }),
-            _ => unreachable!(),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct UsersResponse {
     data: Vec<User>,
@@ -183,7 +167,7 @@ fn main() -> Result<()> {
     let lua_tbl: HashMap<String, i32> = a_table.get("lua_tbl")?;
     println!("[Rust]\ta_table.lua_tbl = {lua_tbl:?}");
 
-    let users: Vec<User> = globals.get("users")?;
+    let users: Vec<User> = lua.from_value(globals.get("users")?)?;
     println!("[Rust]\tusers = {users:#?}");
 
     Ok(())
